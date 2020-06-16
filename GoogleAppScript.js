@@ -3,23 +3,24 @@ var AIMAKER_API_KEY = "$AIメーカーのAPIキーを指定してください$";
 var LINE_ACCESS_TOKEN = "$LINE Developerで発行されたアクセストークンを指定してください$";
 var GOOGLE_DOCS_ID = "$GoogleドキュメントのドキュメントIDを指定してください$";
 var doc = DocumentApp.openById(GOOGLE_DOCS_ID);
-
 function doPost(e){
   Logger.log("Post request.");
   try {
+    
     var json = JSON.parse(e.postData.contents);
     var token= json.events[0].replyToken;
+    //sendLineMessage('判別中...', token);
     var url = 'https://api.line.me/v2/bot/message/'+ json.events[0].message.id +'/content/';
     var image = getImage(url);
     var base64 = Utilities.base64Encode(image.getContent());
     var message = getResult(base64);
     if (message == '') {
-      message = "識別できませんでした。";
+      message = "誰やこれ";
     }
     sendLineMessage(message, token);
   } catch (e) {
     Logger.log("ERROR: %s", e)
-    message = "処理に失敗しました。"
+    message = '画像投稿して・・・';
     sendLineMessage(message, token);
     doc.getBody().appendParagraph(Logger.getLog());
   }
@@ -53,13 +54,8 @@ function getResult(base64){
   Logger.log(response); 
   var json = JSON.parse(response);
   var labels = sortLabel(json.labels);
-  if (labels[0].label && labels[0].score){  
-    result = 'この画像の診断結果は、「' + labels[0].label + '： ' + (Math.round(labels[0].score * 10000) / 100) + "％」です！\n\n";
-  }
-  for (var i in labels) {
-    if (labels[i].label && labels[i].score) {
-      result = result + labels[i].label + '： ' + (Math.round(labels[i].score * 10000) / 100) + "％\n";
-    }
+  if (labels[0].label && labels[0].score){ 
+    result = 'このマスコットは「' + labels[0].label + '」や！覚えてや！\n';
   }
   return result;
 }
